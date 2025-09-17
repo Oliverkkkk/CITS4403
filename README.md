@@ -50,7 +50,7 @@ pip install -r requirements.txt
 4. **Run the application**
 
 ```bash
-# Run from project root:
+# Run from project root
 # Default: 
 python run.py
 # Custom:

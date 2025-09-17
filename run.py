@@ -11,6 +11,7 @@ Run from project root:
 import argparse
 import matplotlib.pyplot as plt
 from src.model import FeralCatModel
+from src.visual2d import animate_grid
 
 
 def main():
@@ -44,16 +45,22 @@ def main():
     df = model.datacollector.get_model_vars_dataframe()
     print(df.tail())
 
+    # Plot population over time
     ax = df[["Prey", "Cats"]].plot(figsize=(7, 4))
     ax.set_title("Population over time")
     ax.set_xlabel("Step")
     ax.set_ylabel("Count")
     plt.show()
 
+    # Plot predation events over time
     ax2 = df["PredationEvents"].plot(figsize=(7, 3))
     ax2.set_title("Predation events per step")
     ax2.set_xlabel("Step")
     ax2.set_ylabel("Events")
+    plt.show()
+
+    # Animate the grid
+    fig, anim = animate_grid(model, steps=args.steps, interval_ms=120)
     plt.show()
 
 
