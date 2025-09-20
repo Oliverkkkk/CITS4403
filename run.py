@@ -15,6 +15,7 @@ from src.visual2d import animate_grid
 
 
 def main():
+    # Initial statues
     parser = argparse.ArgumentParser(description="Feral Cats ABM Simulation")
     parser.add_argument("--steps", type=int, default=100, help="Number of steps to run")
     parser.add_argument("--cats", type=int, default=6, help="Number of cats")
@@ -40,6 +41,7 @@ def main():
         if not model.running:
             break
         model.step()
+
 
     # Print and plot results
     df = model.datacollector.get_model_vars_dataframe()
