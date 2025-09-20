@@ -4,6 +4,9 @@ class Prey(Agent):
     def __init__(self, model):
         super().__init__(model)
 
+    def get_smile(self):
+        pass
+
     # only random move, no reproduction, no cat avoidance
     def step(self):
         grid = self.model.grid
@@ -17,6 +20,9 @@ class Prey(Agent):
 class Cat(Agent):
     def __init__(self, model):
         super().__init__(model)
+
+    def spread_smile(self):
+        pass
 
    # only random move; if with Prey, try to hunt once with given probability
     def step(self):
