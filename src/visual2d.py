@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from matplotlib import animation
+from src.model import count_cats, count_prey
 from itertools import product
 
 try:
@@ -38,6 +39,22 @@ def animate_grid(model, steps=200, interval_ms=150, figsize=(6, 6), title="Feral
     ax.set_aspect("equal")
     ax.invert_yaxis()  # set y=0 on the top
 
+    # draw background based on vegitation
+    for x in range(w):
+        for y in range(h):
+            v = getattr(model, "vegetation", None)
+            if v is not None:
+                val = v[x, y]
+                if val == 1:
+                    ax.add_patch(plt.Rectangle((x, y), 1, 1, color="lightgreen", alpha=0.3))
+                elif val == 2:
+                    ax.add_patch(plt.Rectangle((x, y), 1, 1, color="mediumseagreen", alpha=0.3))
+                elif val == 3:
+                    ax.add_patch(plt.Rectangle((x, y), 1, 1, color="forestgreen", alpha=0.3))
+                elif val == 4:
+                    ax.add_patch(plt.Rectangle((x, y), 1, 1, color="darkgreen", alpha=0.3))
+
+
     for x in range(w + 1):
         ax.axvline(x, lw=0.5, alpha=0.3)
     for y in range(h + 1):
@@ -68,8 +85,8 @@ def animate_grid(model, steps=200, interval_ms=150, figsize=(6, 6), title="Feral
         prey_scatter.set_offsets(list(zip(px, py)) if px else [])
 
         # statistics
-        n_cats = sum(a.__class__.__name__ == "Cat" for a in model.agents)
-        n_prey = sum(a.__class__.__name__ == "Prey" for a in model.agents)
+        n_cats = count_cats(model)
+        n_prey = count_prey(model)
         pred_events = getattr(model, "predation_events_this_step", 0)
         text_box.set_text(f"Step: {frame+1}\nCats: {n_cats}  Prey: {n_prey}\nPredationEvents: {pred_events}")
 

@@ -38,35 +38,27 @@ def main():
         seed=args.seed,
     )
 
-    # Simulation
-    for _ in range(args.steps):
-        if not model.running:
-            break
-        model.step()
+    model.datacollector.collect(model)
 
+    fig, anim = animate_grid(model, steps=args.steps + 1, interval_ms=300)
+    plt.show()
 
-    # Print and plot results
-    df = model.datacollector.get_model_vars_dataframe()
+    df = model.datacollector.get_model_vars_dataframe().reset_index(drop=True)
     print(df.tail())
 
-    # Plot population over time
     ax = df[["Prey", "Cats"]].plot(figsize=(7, 4))
     ax.set_title("Population over time")
     ax.set_xlabel("Step")
     ax.set_ylabel("Count")
+    plt.tight_layout()
     plt.show()
 
-    # Plot predation events over time
     ax2 = df["PredationEvents"].plot(figsize=(7, 3))
     ax2.set_title("Predation events per step")
     ax2.set_xlabel("Step")
     ax2.set_ylabel("Events")
+    plt.tight_layout()
     plt.show()
-
-    # Animate the grid
-    fig, anim = animate_grid(model, steps=args.steps, interval_ms=300)
-    plt.show()
-
 
 if __name__ == "__main__":
     main()

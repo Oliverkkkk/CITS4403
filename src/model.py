@@ -2,6 +2,7 @@ from mesa import Model
 from mesa.space import MultiGrid
 from mesa.datacollection import DataCollector
 from .agents import Cat, Prey
+import numpy as np
 
 
 class FeralCatModel(Model):
@@ -26,6 +27,9 @@ class FeralCatModel(Model):
         self.grid = MultiGrid(width, height, torus=False)
         self.running = True
 
+        self.vegetation = np.random.choice([0,1,2,3,4], size=(width, height), p=[0.4, 0.2,0.15,0.15, 0.1])
+        self.prey_trail = np.full((width, height), 5, dtype=int)
+
         # place prey
         for i in range(n_prey):
             prey = Prey(self)
@@ -48,6 +52,8 @@ class FeralCatModel(Model):
 
     def step(self):
         self.predation_events_this_step = 0
+        self.prey_trail = np.minimum(self.prey_trail + 1, 5)
+
         self.agents.shuffle_do("step")
         self.datacollector.collect(self)
 
@@ -55,8 +61,8 @@ class FeralCatModel(Model):
         if not any(isinstance(a, Prey) for a in self.agents):
             self.running = False
 
-def count_cats(model: "FeralCatModel"):
-    return sum(isinstance(a, Cat) for a in model.agents)
+def count_cats(model):
+    return sum(isinstance(a, Cat) and getattr(a, "alive", True) for a in model.agents)
 
 def count_prey(model: "FeralCatModel"):
     return sum(isinstance(a, Prey) for a in model.agents)
