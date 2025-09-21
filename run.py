@@ -24,7 +24,8 @@ def main():
     parser.add_argument("--prey", type=int, default=40, help="Number of prey")
     parser.add_argument("--width", type=int, default=25, help="Grid width")
     parser.add_argument("--height", type=int, default=25, help="Grid height")
-    parser.add_argument("--p", type=float, default=0.35, help="Predation probability")
+    parser.add_argument("--pb", type=float, default=0.2, help="predation_base")
+    parser.add_argument("--pc", type=float, default=0.1, help="predation_coef")
     parser.add_argument("--seed", type=int, default=None, help="Random seed")
     args = parser.parse_args()
 
@@ -34,7 +35,8 @@ def main():
         height=args.height,
         n_cats=args.cats,
         n_prey=args.prey,
-        predation_prob=args.p,
+        predation_base=args.pb,
+        predation_coef=args.pc,
         seed=args.seed,
     )
 

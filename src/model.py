@@ -17,14 +17,18 @@ class FeralCatModel(Model):
         height: int = 20,
         n_cats: int = 5,
         n_prey: int = 20,
-        predation_prob: float = 0.35,
+        predation_base: float = 0.2,
+        predation_coef: float = 0.1,
         seed: int | None = None,
+        prey_flee_prob: float = 0.4
     ):
         super().__init__(seed=seed)
         self.width = width
         self.height = height
-        self.predation_prob = float(predation_prob)
         self.grid = MultiGrid(width, height, torus=False)
+        self.predation_base = predation_base
+        self.predation_coef = predation_coef
+        prey_flee_prob: float = 0.4
         self.running = True
 
         self.river = np.zeros((width, height), dtype=bool)
@@ -73,6 +77,30 @@ class FeralCatModel(Model):
             }
         )
 
+    def refresh_cat_scent(self, radius: int = 2):
+        """用当前所有存活猫的位置，生成'气味'布尔图（Chebyshev距离<=radius 即有气味）。"""
+        import numpy as np
+        w, h = self.width, self.height
+
+        # 初始化/清空 cat_scent
+        if not hasattr(self, "cat_scent") or getattr(self, "cat_scent").shape != (w, h):
+            self.cat_scent = np.zeros((w, h), dtype=np.uint8)
+        else:
+            self.cat_scent.fill(0)
+
+        self.cat_positions = []
+        for a in self.agents:
+            # 只考虑存活的猫
+            if isinstance(a, Cat) and getattr(a, "alive", True) and getattr(a, "pos", None) is not None:
+                cx, cy = a.pos
+                self.cat_positions.append((cx, cy))
+                x0, x1 = max(0, cx - radius), min(w - 1, cx + radius)
+                y0, y1 = max(0, cy - radius), min(h - 1, cy + radius)
+                for x in range(x0, x1 + 1):
+                    for y in range(y0, y1 + 1):
+                        if max(abs(x - cx), abs(y - cy)) <= radius:  # Chebyshev 距离
+                            self.cat_scent[x, y] = 1
+
     def is_blocked(self, pos):
         x, y = pos
         if x < 0 or x >= self.width or y < 0 or y >= self.height:
@@ -81,6 +109,7 @@ class FeralCatModel(Model):
 
     def step(self):
         self.predation_events_this_step = 0
+        self.refresh_cat_scent(radius=2)
         self.prey_trail = np.minimum(self.prey_trail + 1, 5)
 
         self.agents.shuffle_do("step")
@@ -89,6 +118,15 @@ class FeralCatModel(Model):
         # if no prey left, stop the model
         if not any(isinstance(a, Prey) for a in self.agents):
             self.running = False
+
+    def predation_prob_at(self, pos: tuple[int, int]) -> float:
+        veg = getattr(self, "vegetation", None)
+        v = 0
+        if veg is not None:
+            x, y = pos
+            v = int(veg[x, y])
+        p = self.predation_base + self.predation_coef * v
+        return p
 
 def count_cats(model):
     return sum(isinstance(a, Cat) and getattr(a, "alive", True) for a in model.agents)
