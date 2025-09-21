@@ -10,6 +10,8 @@ Run from project root:
 
 import argparse
 import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use("MacOSX") #run in mac
 from src.model import FeralCatModel
 from src.visual2d import animate_grid
 
@@ -62,7 +64,7 @@ def main():
     plt.show()
 
     # Animate the grid
-    fig, anim = animate_grid(model, steps=args.steps, interval_ms=120)
+    fig, anim = animate_grid(model, steps=args.steps, interval_ms=300)
     plt.show()
 
 
