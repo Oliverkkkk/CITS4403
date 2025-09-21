@@ -12,20 +12,21 @@ class Prey(Agent):
         grid = self.model.grid
         # Moore neighborhood (including center), step size=1
         neighborhood = grid.get_neighborhood(self.pos, moore=True, include_center=True, radius=1)
+        valid = [p for p in neighborhood if not self.model.is_blocked(p)]
         #get vegetation information
         vegetation = getattr(self.model, "vegetation", None)
         if vegetation is not None:
             weights = []
-            for (x, y) in neighborhood:
+            for (x, y) in valid:
                 if x < 0 or x >= self.model.width or y < 0 or y >= self.model.height:
                     weights.append(1)
                 else:
                     veg_val = vegetation[x, y]
                     weights.append(1 + veg_val)
             # move to grid with higher vegetation
-            dest = self.model.random.choices(neighborhood, weights=weights, k=1)[0]
+            dest = self.model.random.choices(valid, weights=weights, k=1)[0]
         else:
-            dest = self.model.random.choice(neighborhood)
+            dest = self.model.random.choice(valid)
         grid.move_agent(self, dest)
         #left trail
         x, y = self.pos
@@ -53,16 +54,17 @@ class Cat(Agent):
             # move: Moore neighborhood, step size=1
             neighborhood = grid.get_neighborhood(self.pos, moore=True, include_center=True, radius=1)
             dest = None
+            valid = [p for p in neighborhood if not self.model.is_blocked(p)]
             trail = getattr(self.model, "prey_trail", None)
             if trail is not None:
                 weights = []
-                for (x, y) in neighborhood:
+                for (x, y) in valid:
                     v = int(trail[x, y])
                     w = max(6 - v, 1)
                     weights.append(w)
-                dest = self.model.random.choices(neighborhood, weights=weights, k=1)[0]
+                dest = self.model.random.choices(valid, weights=weights, k=1)[0]
             else:
-                dest = self.random.choice(neighborhood)
+                dest = self.random.choice(valid)
 
             grid.move_agent(self, dest)
 

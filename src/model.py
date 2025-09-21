@@ -27,20 +27,43 @@ class FeralCatModel(Model):
         self.grid = MultiGrid(width, height, torus=False)
         self.running = True
 
+        self.river = np.zeros((width, height), dtype=bool)
+        thickness = 2
+        cx = width // 2
+        x0, x1 = max(0, cx - thickness // 2), min(width, cx + (thickness + 1) // 2)
+        for y in range(height):
+            rx = int(cx + 2 * np.sin(2 * np.pi * y / max(1, height)))
+            half = thickness // 2
+            xL = max(0, rx - half)
+            xR = min(width, rx + (thickness + 1) // 2)
+            self.river[xL:xR, y] = True
+
+        gap_len = max(3, height // 6)
+        gap_center = height // 3
+        g0 = max(0, gap_center - gap_len // 2)
+        g1 = min(height, g0 + gap_len)
+        self.river[x0-1:x1+1, g0:g1] = False
+
         self.vegetation = np.random.choice([0,1,2,3,4], size=(width, height), p=[0.4, 0.2,0.15,0.15, 0.1])
         self.prey_trail = np.full((width, height), 5, dtype=int)
 
         # place prey
         for i in range(n_prey):
-            prey = Prey(self)
-            x, y = self.random.randrange(width), self.random.randrange(height)
-            self.grid.place_agent(prey, (x, y))
+            while True:
+                x, y = self.random.randrange(width), self.random.randrange(height)
+                if not self.river[x, y]:
+                    a = Prey(self)
+                    self.grid.place_agent(a, (x, y))
+                    break
 
         # place cats
         for i in range(n_cats):
-            cat = Cat(self)
-            x, y = self.random.randrange(width), self.random.randrange(height)
-            self.grid.place_agent(cat, (x, y))
+            while True:
+                x, y = self.random.randrange(width), self.random.randrange(height)
+                if not self.river[x, y]:
+                    a = Cat(self)
+                    self.grid.place_agent(a, (x, y))
+                    break
 
         self.datacollector = DataCollector(
             model_reporters={
@@ -49,6 +72,12 @@ class FeralCatModel(Model):
                 "PredationEvents": lambda m: getattr(m, "predation_events_this_step", 0),
             }
         )
+
+    def is_blocked(self, pos):
+        x, y = pos
+        if x < 0 or x >= self.width or y < 0 or y >= self.height:
+            return True
+        return bool(self.river[x, y])
 
     def step(self):
         self.predation_events_this_step = 0
