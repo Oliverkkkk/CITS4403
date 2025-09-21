@@ -28,6 +28,8 @@ class FeralCatModel(Model):
         self.running = True
 
         self.vegetation = np.random.choice([0,1,2,3,4], size=(width, height), p=[0.4, 0.2,0.15,0.15, 0.1])
+        self.prey_trail = np.full((width, height), 5, dtype=int)
+
         # place prey
         for i in range(n_prey):
             prey = Prey(self)
@@ -50,6 +52,8 @@ class FeralCatModel(Model):
 
     def step(self):
         self.predation_events_this_step = 0
+        self.prey_trail = np.minimum(self.prey_trail + 1, 5)
+
         self.agents.shuffle_do("step")
         self.datacollector.collect(self)
 

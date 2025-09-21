@@ -27,6 +27,10 @@ class Prey(Agent):
         else:
             dest = self.model.random.choice(neighborhood)
         grid.move_agent(self, dest)
+        #left trail
+        x, y = self.pos
+        if hasattr(self.model, "prey_trail"):
+            self.model.prey_trail[x, y] = 1
 
 
 class Cat(Agent):
@@ -48,7 +52,18 @@ class Cat(Agent):
         for _ in range(self.energy):
             # move: Moore neighborhood, step size=1
             neighborhood = grid.get_neighborhood(self.pos, moore=True, include_center=True, radius=1)
-            dest = self.random.choice(neighborhood)
+            dest = None
+            trail = getattr(self.model, "prey_trail", None)
+            if trail is not None:
+                weights = []
+                for (x, y) in neighborhood:
+                    v = int(trail[x, y])
+                    w = max(6 - v, 1)
+                    weights.append(w)
+                dest = self.model.random.choices(neighborhood, weights=weights, k=1)[0]
+            else:
+                dest = self.random.choice(neighborhood)
+
             grid.move_agent(self, dest)
 
             # prey: check the cell after move
