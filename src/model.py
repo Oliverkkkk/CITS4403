@@ -27,7 +27,7 @@ class FeralCatModel(Model):
         self.grid = MultiGrid(width, height, torus=False)
         self.running = True
 
-        self.vegetation = np.random.choice([0,1,2,3,4], size=(width, height), p=[0.2, 0.3,0.2,0.2, 0.1])
+        self.vegetation = np.random.choice([0,1,2,3,4], size=(width, height), p=[0.4, 0.2,0.15,0.15, 0.1])
         # place prey
         for i in range(n_prey):
             prey = Prey(self)

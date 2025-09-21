@@ -12,8 +12,20 @@ class Prey(Agent):
         grid = self.model.grid
         # Moore neighborhood (including center), step size=1
         neighborhood = grid.get_neighborhood(self.pos, moore=True, include_center=True, radius=1)
-        # Randomly pick a cell (allow multiple agents in one cell; MVP no cat avoidance)
-        dest = self.model.random.choice(neighborhood)
+        #get vegetation information
+        vegetation = getattr(self.model, "vegetation", None)
+        if vegetation is not None:
+            weights = []
+            for (x, y) in neighborhood:
+                if x < 0 or x >= self.model.width or y < 0 or y >= self.model.height:
+                    weights.append(1)
+                else:
+                    veg_val = vegetation[x, y]
+                    weights.append(1 + veg_val)
+            # move to grid with higher vegetation
+            dest = self.model.random.choices(neighborhood, weights=weights, k=1)[0]
+        else:
+            dest = self.model.random.choice(neighborhood)
         grid.move_agent(self, dest)
 
 
