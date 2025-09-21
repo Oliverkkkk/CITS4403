@@ -2,6 +2,7 @@ from mesa import Model
 from mesa.space import MultiGrid
 from mesa.datacollection import DataCollector
 from .agents import Cat, Prey
+import numpy as np
 
 
 class FeralCatModel(Model):
@@ -26,6 +27,7 @@ class FeralCatModel(Model):
         self.grid = MultiGrid(width, height, torus=False)
         self.running = True
 
+        self.vegetation = np.random.choice([0,1,2,3,4], size=(width, height), p=[0.2, 0.3,0.2,0.2, 0.1])
         # place prey
         for i in range(n_prey):
             prey = Prey(self)
