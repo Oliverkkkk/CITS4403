@@ -1,8 +1,13 @@
 from mesa import Agent
 
 class Prey(Agent):
-    def __init__(self, model):
+    def __init__(self, model,sex=None):
         super().__init__(model)
+        if sex in ("F","M"):
+            self.sex = sex
+        else:
+            p_f = getattr(self.model, "prey_female_ratio", 0.5)
+            self.sex = "F" if self.model.random.random() < p_f else "M"
 
     def get_smile(self):
         pass
