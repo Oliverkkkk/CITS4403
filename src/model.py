@@ -17,14 +17,16 @@ class FeralCatModel(Model):
         height: int = 20,
         n_cats: int = 5,
         n_prey: int = 20,
-        predation_prob: float = 0.35,
+        predation_base: float = 0.2,
+        predation_coef: float = 0.1,
         seed: int | None = None,
     ):
         super().__init__(seed=seed)
         self.width = width
         self.height = height
-        self.predation_prob = float(predation_prob)
         self.grid = MultiGrid(width, height, torus=False)
+        self.predation_base = predation_base
+        self.predation_coef = predation_coef
         self.running = True
 
         self.river = np.zeros((width, height), dtype=bool)
@@ -89,6 +91,15 @@ class FeralCatModel(Model):
         # if no prey left, stop the model
         if not any(isinstance(a, Prey) for a in self.agents):
             self.running = False
+
+    def predation_prob_at(self, pos: tuple[int, int]) -> float:
+        veg = getattr(self, "vegetation", None)
+        v = 0
+        if veg is not None:
+            x, y = pos
+            v = int(veg[x, y])
+        p = self.predation_base + self.predation_coef * v
+        return p
 
 def count_cats(model):
     return sum(isinstance(a, Cat) and getattr(a, "alive", True) for a in model.agents)

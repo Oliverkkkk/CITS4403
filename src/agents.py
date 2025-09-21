@@ -116,7 +116,8 @@ class Cat(Agent):
             if prey_here:
                 # select one prey to attempt predation (once per step)
                 target = self.model.random.choice(prey_here)
-                if self.model.random.random() < self.model.predation_prob:
+                prob = self.model.predation_prob_at(self.pos)
+                if self.model.random.random() < prob:
                     # successful predation
                     target.remove()
                     self.model.predation_events_this_step += 1
