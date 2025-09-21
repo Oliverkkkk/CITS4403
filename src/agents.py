@@ -9,6 +9,8 @@ class Prey(Agent):
             p_f = getattr(self.model, "prey_female_ratio", 0.5)
             self.sex = "F" if self.model.random.random() < p_f else "M"
 
+        self.since_repro = 0
+
     def get_smile(self):
         pass
 
@@ -37,6 +39,40 @@ class Prey(Agent):
         x, y = self.pos
         if hasattr(self.model, "prey_trail"):
             self.model.prey_trail[x, y] = 1
+        self.since_repro += 1
+        # Check Reproduction conditions
+        #gender
+        if self.sex != "F":
+            return
+        #vegetation
+        if vegetation is None or vegetation[x, y] <= 2:
+            return
+        neigh_no_center = grid.get_neighborhood(self.pos, moore=True, include_center=False, radius=1)
+        agents_near = grid.get_cell_list_contents(neigh_no_center)
+        male_nearby = any(isinstance(a, Prey) and getattr(a, "sex", None) == "M" for a in agents_near)
+        # any male nearby
+        if not male_nearby:
+            return
+        #time from last reproduce
+        if self.since_repro < 30:
+            return
+
+        n_offspring = self.model.random.randint(0, 2)
+        spawn_pos = self.pos
+        for _ in range(n_offspring):
+            baby_sex = "F" if self.model.random.random() < getattr(self.model, "prey_female_ratio", 0.5) else "M"
+            baby = Prey(self.model, sex=baby_sex)
+            grid.place_agent(baby, spawn_pos)
+
+            # 可选：足迹置为“刚经过”
+            if hasattr(self.model, "prey_trail"):
+                bx, by = spawn_pos
+                self.model.prey_trail[bx, by] = 1
+
+        # 成功繁衍后重置冷却
+        self.since_repro = 0
+
+
 
 
 class Cat(Agent):
