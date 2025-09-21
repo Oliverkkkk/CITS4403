@@ -32,14 +32,20 @@ class Prey(Agent):
 class Cat(Agent):
     def __init__(self, model):
         super().__init__(model)
+        self.energy = 3
+        self.counter = 0
+        self.alive = True
 
     def spread_smile(self):
         pass
 
     def step(self):
+        if not self.alive:
+            return
+
         grid = self.model.grid
 
-        for _ in range(3):
+        for _ in range(self.energy):
             # move: Moore neighborhood, step size=1
             neighborhood = grid.get_neighborhood(self.pos, moore=True, include_center=True, radius=1)
             dest = self.random.choice(neighborhood)
@@ -56,3 +62,16 @@ class Cat(Agent):
                     # successful predation
                     target.remove()
                     self.model.predation_events_this_step += 1
+
+                    self.energy = min(self.energy + 1, 3)
+                    self.counter = 0
+        # Add energy limitation
+        self.counter += 1
+        if self.counter >= 15:
+            self.energy -= 1
+            self.counter = 0
+
+        if self.energy <= 0:
+            grid.remove_agent(self)
+            self.alive = False
+

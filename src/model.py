@@ -57,8 +57,8 @@ class FeralCatModel(Model):
         if not any(isinstance(a, Prey) for a in self.agents):
             self.running = False
 
-def count_cats(model: "FeralCatModel"):
-    return sum(isinstance(a, Cat) for a in model.agents)
+def count_cats(model):
+    return sum(isinstance(a, Cat) and getattr(a, "alive", True) for a in model.agents)
 
 def count_prey(model: "FeralCatModel"):
     return sum(isinstance(a, Prey) for a in model.agents)

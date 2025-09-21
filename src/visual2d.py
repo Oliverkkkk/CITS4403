@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from matplotlib import animation
+from src.model import count_cats, count_prey
 from itertools import product
 
 try:
@@ -84,8 +85,8 @@ def animate_grid(model, steps=200, interval_ms=150, figsize=(6, 6), title="Feral
         prey_scatter.set_offsets(list(zip(px, py)) if px else [])
 
         # statistics
-        n_cats = sum(a.__class__.__name__ == "Cat" for a in model.agents)
-        n_prey = sum(a.__class__.__name__ == "Prey" for a in model.agents)
+        n_cats = count_cats(model)
+        n_prey = count_prey(model)
         pred_events = getattr(model, "predation_events_this_step", 0)
         text_box.set_text(f"Step: {frame+1}\nCats: {n_cats}  Prey: {n_prey}\nPredationEvents: {pred_events}")
 
