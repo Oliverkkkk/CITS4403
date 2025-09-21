@@ -54,6 +54,12 @@ def animate_grid(model, steps=200, interval_ms=150, figsize=(6, 6), title="Feral
                 elif val == 4:
                     ax.add_patch(plt.Rectangle((x, y), 1, 1, color="darkgreen", alpha=0.3))
 
+        # add river
+        if hasattr(model, "river"):
+            for x in range(w):
+                for y in range(h):
+                    if model.river[x, y]:
+                        ax.add_patch(plt.Rectangle((x, y), 1, 1, color="deepskyblue", alpha=1))
 
     for x in range(w + 1):
         ax.axvline(x, lw=0.5, alpha=0.3)
