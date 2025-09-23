@@ -11,7 +11,7 @@ Run from project root:
 import argparse
 import matplotlib.pyplot as plt
 import matplotlib
-matplotlib.use("MacOSX") #run in mac
+import os, sys
 from src.model import FeralCatModel
 from src.visual2d import animate_grid
 
@@ -42,12 +42,14 @@ def main():
 
     model.datacollector.collect(model)
 
+    # 2D-grid animation 
     fig, anim = animate_grid(model, steps=args.steps + 1, interval_ms=300)
     plt.show()
 
     df = model.datacollector.get_model_vars_dataframe().reset_index(drop=True)
     print(df.tail())
 
+    # Plot population over time
     ax = df[["Prey", "Cats"]].plot(figsize=(7, 4))
     ax.set_title("Population over time")
     ax.set_xlabel("Step")
@@ -55,6 +57,7 @@ def main():
     plt.tight_layout()
     plt.show()
 
+    # Plot predation events over time
     ax2 = df["PredationEvents"].plot(figsize=(7, 3))
     ax2.set_title("Predation events per step")
     ax2.set_xlabel("Step")
@@ -62,5 +65,32 @@ def main():
     plt.tight_layout()
     plt.show()
 
+def select_backend(interactive=True):
+    """
+     Select a safe matplotlib backend across OSes.
+    """
+    # keep any pre-set backend in environment variable
+    if os.environ.get("MPLBACKEND"):
+        return
+   
+    # Agg in non-interactive mode
+    if not interactive or os.environ.get("CI") or not sys.stdout.isatty():
+        matplotlib.use("Agg", force=True)
+        return
+   
+    # order in interactive mode: QtAgg, TkAgg, Agg
+    candidates = (
+        ["MacOSX", "QtAgg", "TkAgg", "Agg"] if sys.platform == "darwin"
+        else ["QtAgg", "TkAgg", "Agg"]
+    )
+    for name in candidates:
+        try:
+            matplotlib.use(name, force=True)
+            return
+        except Exception:
+            continue
+
+
 if __name__ == "__main__":
+    select_backend(interactive=True)
     main()
