@@ -31,7 +31,7 @@ class Prey(Agent):
         sensed = (cat_scent is not None and cat_scent[curr_pos[0], curr_pos[1]] == 1)
 
         dest = None
-        flee_prob = getattr(self.model, "prey_flee_prob", 0.4)
+        flee_prob = self.model.prey_flee_prob
 
         if sensed and self.model.random.random() < flee_prob and cat_positions:
             # 3A) 逃跑模式：从候选里选“离最近猫更远”的格子（最大化最近猫距离）
@@ -161,6 +161,7 @@ class Cat(Agent):
                     # successful predation
                     target.remove()
                     self.model.predation_events_this_step += 1
+                    self.model.predation_events_total += 1
 
                     self.energy = min(self.energy + 1, 3)
                     self.counter = 0
