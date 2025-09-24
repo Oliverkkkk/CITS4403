@@ -57,8 +57,8 @@ python run.py
 python run.py --steps 200 --cats 10 --prey 50 --width 30 --height 30 --p 0.4 --seed 123
 ```
 <p>
-  For now, it will generate two plots: <i>population over time</i> and <i>Predation events per step</i>.
+  For now, a 2D-grid animation is displayed to show the interaction of cats and prey by steps.
 </p>
 <p>
-  Then, a 2D-grid animation is displayed to show the interaction of cats and prey by steps.
+  Then, it will generate two plots: <i>population over time</i> and <i>Predation events per step</i>.
 </p>
