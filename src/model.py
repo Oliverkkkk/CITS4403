@@ -113,6 +113,14 @@ class FeralCatModel(Model):
         self.prey_trail = np.minimum(self.prey_trail + 1, 5)
 
         self.agents.shuffle_do("step")
+        if hasattr(self, "vegetation") and self.vegetation is not None:
+            v = self.vegetation
+            if hasattr(self, "river") and self.river is not None:
+                mask = (v > 0) & (np.random.rand(*v.shape) < 0.4)
+                v[mask] += 1
+            else:
+                v[v > 0] += 1
+            np.minimum(v, 4, out=v)
         self.datacollector.collect(self)
 
         # if no prey left, stop the model

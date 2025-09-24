@@ -24,6 +24,7 @@ class Prey(Agent):
         cat_positions = getattr(self.model, "cat_positions", [])
         cat_scent = getattr(self.model, "cat_scent", None)
         curr_pos = self.pos
+        vegetation = getattr(self.model, "vegetation", None)
 
         def cheb(p, q):
             return max(abs(p[0] - q[0]), abs(p[1] - q[1]))
@@ -45,6 +46,10 @@ class Prey(Agent):
                     best_positions.append(pos)
             dest = self.model.random.choice(best_positions)
             x, y = self.pos
+            if vegetation is not None:
+                x, y = self.pos
+                if vegetation[x, y] > 0:
+                    vegetation[x, y] = max(1, vegetation[x, y] - 1)
             if hasattr(self.model, "prey_trail"):
                 self.model.prey_trail[x, y] = 1
             self.since_repro += 1
@@ -69,6 +74,11 @@ class Prey(Agent):
             if hasattr(self.model, "prey_trail"):
                 self.model.prey_trail[x, y] = 1
             self.since_repro += 1
+
+            if vegetation is not None:
+                x, y = self.pos
+                if vegetation[x, y] > 0:
+                    vegetation[x, y] = max(1, vegetation[x, y] - 2)
 
             # Check Reproduction conditions
             # gender
