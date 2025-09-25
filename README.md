@@ -49,16 +49,17 @@ pip install -r requirements.txt
 
 4. **Run the application**
 
+Interactive GUI entry:
+```bash
+# Run from project root
+python run.py # GUI entry point for the Feral Cats ABM.
+```
+
+Quick entry:
 ```bash
 # Run from project root
 # Default: 
-python run.py
+python run_mini.py
 # Custom:
-python run.py --steps 200 --cats 10 --prey 50 --width 30 --height 30 --p 0.4 --seed 123
+python run_mini.py --steps 200 --cats 10 --prey 50 --width 30 --height 30 --p 0.4 --seed 123
 ```
-<p>
-  For now, a 2D-grid animation is displayed to show the interaction of cats and prey by steps.
-</p>
-<p>
-  Then, it will generate two plots: <i>population over time</i> and <i>Predation events per step</i>.
-</p>

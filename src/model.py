@@ -13,14 +13,14 @@ class FeralCatModel(Model):
     """
     def __init__(
         self,
-        width: int = 20,
-        height: int = 20,
-        n_cats: int = 5,
-        n_prey: int = 20,
-        predation_base: float = 0.2,
-        predation_coef: float = 0.1,
-        seed: int | None = None,
-        prey_flee_prob: float = 0.4
+        width: int,
+        height: int,
+        n_cats: int,
+        n_prey: int,
+        predation_base: float,
+        predation_coef: float,
+        prey_flee_prob: float,
+        seed: int | None = None
     ):
         super().__init__(seed=seed)
         self.width = width
@@ -28,8 +28,9 @@ class FeralCatModel(Model):
         self.grid = MultiGrid(width, height, torus=False)
         self.predation_base = predation_base
         self.predation_coef = predation_coef
-        prey_flee_prob: float = 0.4
+        self.prey_flee_prob = prey_flee_prob
         self.running = True
+        self.predation_events_total = 0
 
         self.river = np.zeros((width, height), dtype=bool)
         thickness = 2
@@ -73,7 +74,8 @@ class FeralCatModel(Model):
             model_reporters={
                 "Cats": count_cats,
                 "Prey": count_prey,
-                "PredationEvents": lambda m: getattr(m, "predation_events_this_step", 0),
+                "predation_events_this_step": lambda m: getattr(m, "predation_events_this_step", 0),
+                "predation_events_total": lambda m: m.predation_events_total,
             }
         )
 

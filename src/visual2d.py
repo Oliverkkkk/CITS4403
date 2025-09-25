@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from matplotlib import animation
+from matplotlib.lines import Line2D
 from src.model import count_cats, count_prey
 from itertools import product
 
@@ -26,10 +27,13 @@ def _get_positions(model):
             prey_y.append(y + 0.5)
     return cats_x, cats_y, prey_x, prey_y
 
-def animate_grid(model, steps=200, interval_ms=150, figsize=(6, 6), title="Feral Cats vs Prey (2D Grid)"):
+def animate_grid(
+        model, steps, interval_ms, 
+        figsize=(6, 6), title="Feral Cats vs Prey (2D Grid)", on_finished=None
+):
     w, h = model.width, model.height
 
-    fig, ax = plt.subplots(figsize=figsize)
+    fig, ax = plt.subplots(figsize=figsize, constrained_layout=False)
     ax.set_title(title)
     ax.set_xlim(0, w)
     ax.set_ylim(0, h)
@@ -80,10 +84,25 @@ def animate_grid(model, steps=200, interval_ms=150, figsize=(6, 6), title="Feral
     for gy in range(h + 1):
         ax.axhline(gy, lw=0.5, alpha=0.3)
 
-    # 点图与文字
-    cats_scatter = ax.scatter([], [], marker="s")
-    prey_scatter = ax.scatter([], [], marker="o")
+    # agent scatters & text box
+    cats_scatter = ax.scatter([], [], marker="s", c="tab:red")
+    prey_scatter = ax.scatter([], [], marker="o", c="tab:blue")
     text_box = ax.text(0.02, 0.98, "", transform=ax.transAxes, va="top")
+
+    legend_elems = [
+    Line2D([0],[0], marker='s', linestyle='None', markerfacecolor='tab:red',  markersize=6, label='Cats'),
+    Line2D([0],[0], marker='o', linestyle='None', markerfacecolor='tab:blue', markersize=6, label='Prey'),
+    ]
+    legend = ax.legend(
+        handles=legend_elems,
+        loc="lower center",           
+        bbox_to_anchor=(0.5, -0.10),  # use bbox_to_anchor to set the exact position
+        ncol=len(legend_elems),       # arranged in a single row
+        columnspacing=1.2,            # column spacing
+        handletextpad=0.3,
+        borderaxespad=0.,
+        frameon=True, fancybox=True, framealpha=0.1
+    ) # Agents index
 
     def init():
         cx, cy, px, py = _get_positions(model)
@@ -111,7 +130,11 @@ def animate_grid(model, steps=200, interval_ms=150, figsize=(6, 6), title="Feral
         n_cats = count_cats(model)
         n_prey = count_prey(model)
         pred_events = getattr(model, "predation_events_this_step", 0)
-        text_box.set_text(f"Step: {frame+1}\nCats: {n_cats}  Prey: {n_prey}\nPredationEvents: {pred_events}")
+        pred_events_total = getattr(model, "predation_events_total", 0)
+        text_box.set_text(f"Step: {frame+1}\nCats: {n_cats}\nPrey: {n_prey}\nPredationEvents: {pred_events}\nPredationEventsTotal: {pred_events_total}")
+
+        if (frame + 1) >= steps and callable(on_finished):
+            on_finished()
 
         # 返回所有被修改的 artists（不启用blit时也安全）
         return tuple(cell_patches.values()) + (cats_scatter, prey_scatter, text_box)
