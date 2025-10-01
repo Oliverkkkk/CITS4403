@@ -1,6 +1,6 @@
 """
 GUI entry point for the Feral Cats ABM (custom map support, class-based, no unresolved refs).
-Run: python run_custom_map.py
+Run: python run.py
 """
 
 import os, sys, json
@@ -121,6 +121,9 @@ def launch_gui():
             self.reset_btn = ttk.Button(self.params, text="Reset", command=self.reset_sim, state="normal")
             self.reset_btn.grid(row=r, column=0, columnspan=2, pady=(2,0), sticky="ew"); r += 1
 
+            self.scent_var = tk.BooleanVar(value=False)  # scent display toggle
+            ttk.Checkbutton(self.params, text="Show cat scent range", variable=self.scent_var).grid(row=r, column=0, columnspan=2, sticky="w", pady=(6, 0)); r += 1
+
             # state
             self.canvas_widget = None
             self.current_fig = None
@@ -154,13 +157,13 @@ def launch_gui():
                 elif path.lower().endswith(".png"):
                     v = load_vegetation_from_png(path, scale=4)
                 else:
-                    messagebox.showerror("Unsupported", "仅支持 CSV / JSON / PNG"); return
+                    messagebox.showerror("Unsupported", "CSV / JSON / PNG only"); return
                 self.V = v
                 h, w = v.shape
                 self.width_var.set(str(w)); self.height_var.set(str(h))
                 self.veg_label_var.set(f"Vegetation: {os.path.basename(path)} shape={v.shape} range=[{v.min()},{v.max()}]")
             except Exception as e:
-                messagebox.showerror("Load error", f"载入植被失败：\n{e}")
+                messagebox.showerror("Load error", f"Failed to load nutrition：\n{e}")
 
         def load_river(self):
             from tkinter import filedialog, messagebox
@@ -178,7 +181,7 @@ def launch_gui():
                 self.R = m.astype(bool)
                 self.river_label_var.set(f"River: {os.path.basename(path)} shape={m.shape} true={m.sum()}")
             except Exception as e:
-                messagebox.showerror("Load error", f"载入河流掩码失败：\n{e}")
+                messagebox.showerror("Load error", f"Failed to load river：\n{e}")
 
         def clear_maps(self):
             self.V = None; self.R = None
@@ -208,6 +211,49 @@ def launch_gui():
             if self.canvas_widget is not None:
                 self.canvas_widget.destroy()
                 self.canvas_widget = None
+
+        def show_plots(self, model):
+            df = model.datacollector.get_model_vars_dataframe().reset_index(drop=True)
+            figs = []
+
+            fig1, ax1 = plt.subplots(figsize=(7, 4))
+            df[["Prey", "Cats"]].plot(ax=ax1)
+            ax1.set_title("Population over time")
+            ax1.set_xlabel("Step"); ax1.set_ylabel("Count")
+            fig1.tight_layout()
+            figs.append(fig1)
+
+            fig2, ax2 = plt.subplots(figsize=(7, 3))
+            df["predation_events_this_step"].plot(ax=ax2)
+            ax2.set_title("Predation events per step")
+            ax2.set_xlabel("Step"); ax2.set_ylabel("Events")
+            fig2.tight_layout()
+            figs.append(fig2)
+
+            remaining = {"windows": len(figs)} # window close tracking
+
+            def _on_figure_closed(event):
+                remaining["windows"] -= 1
+                if remaining["windows"] <= 0:
+                    self.set_running_state(False) # restore main window
+                    try:
+                        root.deiconify()
+                        root.lift()
+                        root.focus_force()
+                    except Exception:
+                        pass
+                    
+            for f in figs:
+                f.canvas.mpl_connect('close_event', _on_figure_closed)
+                try:
+                    f.show()  # Matplotlib 3.5+
+                except Exception:
+                    # compatibility for older versions
+                    f.canvas.draw_idle()
+                    try:
+                        f.canvas.manager.window.deiconify()
+                    except Exception:
+                        pass
 
         # ----- actions -----
         def start_sim(self):
@@ -257,8 +303,13 @@ def launch_gui():
             )
             model.datacollector.collect(model)
 
+            def _on_finished():
+                self.show_plots(model)
+
             fig, anim = animate_grid(model, steps=st+1, interval_ms=300,
-                                     title=f"Feral Cats vs Prey ({model.width}x{model.height})")
+                                     title=f"Feral Cats vs Prey ({model.width}x{model.height})",
+                                     scent_enabled=lambda: self.scent_var.get(),
+                                     on_finished=_on_finished)
 
             canvas = FigureCanvasTkAgg(fig, master=self.display)
             canvas.draw()

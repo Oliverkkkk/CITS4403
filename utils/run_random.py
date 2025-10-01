@@ -1,6 +1,6 @@
 """
 GUI entry point for the Feral Cats ABM.
-- Default: python run.py            
+- Default: python run_random.py            
 """
 
 import os, sys
