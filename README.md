@@ -52,14 +52,29 @@ pip install -r requirements.txt
 Interactive GUI entry:
 ```bash
 # Run from project root
-python run.py # GUI entry point for the Feral Cats ABM.
+python run.py
 ```
 
-Quick entry:
-```bash
-# Run from project root
-# Default: 
-python run_mini.py
-# Custom:
-python run_mini.py --steps 200 --cats 10 --prey 50 --width 30 --height 30 --p 0.4 --seed 123
-```
+### Dashboard & Outputs
+
+This project implements an agent-based model (ABM) of **feral cats vs prey** in a spatial grid environment.  
+The interactive dashboard allows users to configure parameters, run simulations, and visualize outcomes.
+
+1. **Simulation Dashboard**
+![Dashboard](./images/dashboard.png)  
+The control panel lets users specify grid size, number of steps, initial cat/prey populations, and model parameters (e.g., predation rates, flee probability).  
+Users can also load custom vegetation/river maps and toggle the display of cat scent ranges.
+
+2. **Grid Animation**
+![Grid Animation](./images/gridAnime.png)  
+During simulation, the grid shows cats (red squares), prey (blue circles), vegetation (green), and rivers (blue, can not pass).  
+Predation events are tracked dynamically, giving a clear picture of spatial interactions.
+
+3. **Population Over Time**
+![Population over time](./images/output1.png)  
+This plot shows the changes in prey and cat populations across simulation steps.  
+It highlights population decline due to predation and ecological constraints.
+
+4. **Predation Events per Step**
+![Predation events](./images/output2.png)  
+This plot records the number of predation events at each time step, reflecting hunting dynamics and prey vulnerability throughout the simulation.
