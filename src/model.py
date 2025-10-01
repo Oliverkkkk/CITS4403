@@ -20,51 +20,78 @@ class FeralCatModel(Model):
         predation_base: float,
         predation_coef: float,
         prey_flee_prob: float,
-        seed: int | None = None
+        seed: int | None = None,
+        vegetation=None,   # 允许外部传入
+        river=None,        # 允许外部传入
     ):
         super().__init__(seed=seed)
-        self.width = width
-        self.height = height
-        self.grid = MultiGrid(width, height, torus=False)
+
+        # --- 尺寸：若传入 vegetation 则以其尺寸为准 ---
+        if vegetation is not None:
+            V = np.array(vegetation, dtype=np.int16)
+            assert V.ndim == 2, "vegetation should be a 2D array"
+            np.clip(V, 0, 4, out=V)
+            self.width, self.height = V.shape
+        else:
+            self.width, self.height = width, height
+
+        # 用最终确定的尺寸创建网格
+        self.grid = MultiGrid(self.width, self.height, torus=False)
+
         self.predation_base = predation_base
         self.predation_coef = predation_coef
         self.prey_flee_prob = prey_flee_prob
         self.running = True
         self.predation_events_total = 0
 
-        self.river = np.zeros((width, height), dtype=bool)
-        thickness = 2
-        cx = width // 2
-        x0, x1 = max(0, cx - thickness // 2), min(width, cx + (thickness + 1) // 2)
-        for y in range(height):
-            rx = int(cx + 2 * np.sin(2 * np.pi * y / max(1, height)))
-            half = thickness // 2
-            xL = max(0, rx - half)
-            xR = min(width, rx + (thickness + 1) // 2)
-            self.river[xL:xR, y] = True
+        # --- river ---
+        if river is not None:
+            R = np.array(river, dtype=bool)
+            assert R.shape == (self.width, self.height), "river should be same as map"
+            self.river = R
+        else:
+            self.river = np.zeros((self.width, self.height), dtype=bool)
+            thickness = 2
+            cx = self.width // 2
+            x0, x1 = max(0, cx - thickness // 2), min(self.width, cx + (thickness + 1) // 2)
+            for y in range(self.height):
+                rx = int(cx + 2 * np.sin(2 * np.pi * y / max(1, self.height)))
+                half = thickness // 2
+                xL = max(0, rx - half)
+                xR = min(self.width, rx + (thickness + 1) // 2)
+                self.river[xL:xR, y] = True
+            gap_len = max(3, self.height // 6)
+            gap_center = self.height // 3
+            g0 = max(0, gap_center - gap_len // 2)
+            g1 = min(self.height, g0 + gap_len)
+            self.river[x0 - 1:x1 + 1, g0:g1] = False
 
-        gap_len = max(3, height // 6)
-        gap_center = height // 3
-        g0 = max(0, gap_center - gap_len // 2)
-        g1 = min(height, g0 + gap_len)
-        self.river[x0-1:x1+1, g0:g1] = False
+        # --- vegetation ---
+        if vegetation is not None:
+            self.vegetation = V
+        else:
+            self.vegetation = np.random.choice(
+                [0, 1, 2, 3, 4],
+                size=(self.width, self.height),
+                p=[0.4, 0.2, 0.15, 0.15, 0.1]
+            )
 
-        self.vegetation = np.random.choice([0,1,2,3,4], size=(width, height), p=[0.4, 0.2,0.15,0.15, 0.1])
-        self.prey_trail = np.full((width, height), 5, dtype=int)
+        # 足迹数组要用最终尺寸
+        self.prey_trail = np.full((self.width, self.height), 5, dtype=int)
 
         # place prey
-        for i in range(n_prey):
+        for _ in range(n_prey):
             while True:
-                x, y = self.random.randrange(width), self.random.randrange(height)
+                x, y = self.random.randrange(self.width), self.random.randrange(self.height)
                 if not self.river[x, y]:
                     a = Prey(self)
                     self.grid.place_agent(a, (x, y))
                     break
 
         # place cats
-        for i in range(n_cats):
+        for _ in range(n_cats):
             while True:
-                x, y = self.random.randrange(width), self.random.randrange(height)
+                x, y = self.random.randrange(self.width), self.random.randrange(self.height)
                 if not self.river[x, y]:
                     a = Cat(self)
                     self.grid.place_agent(a, (x, y))
@@ -81,10 +108,8 @@ class FeralCatModel(Model):
 
     def refresh_cat_scent(self, radius: int = 2):
         """用当前所有存活猫的位置，生成'气味'布尔图（Chebyshev距离<=radius 即有气味）。"""
-        import numpy as np
         w, h = self.width, self.height
 
-        # 初始化/清空 cat_scent
         if not hasattr(self, "cat_scent") or getattr(self, "cat_scent").shape != (w, h):
             self.cat_scent = np.zeros((w, h), dtype=np.uint8)
         else:
@@ -92,7 +117,6 @@ class FeralCatModel(Model):
 
         self.cat_positions = []
         for a in self.agents:
-            # 只考虑存活的猫
             if isinstance(a, Cat) and getattr(a, "alive", True) and getattr(a, "pos", None) is not None:
                 cx, cy = a.pos
                 self.cat_positions.append((cx, cy))
@@ -100,7 +124,7 @@ class FeralCatModel(Model):
                 y0, y1 = max(0, cy - radius), min(h - 1, cy + radius)
                 for x in range(x0, x1 + 1):
                     for y in range(y0, y1 + 1):
-                        if max(abs(x - cx), abs(y - cy)) <= radius:  # Chebyshev 距离
+                        if max(abs(x - cx), abs(y - cy)) <= radius:
                             self.cat_scent[x, y] = 1
 
     def is_blocked(self, pos):
@@ -115,17 +139,17 @@ class FeralCatModel(Model):
         self.prey_trail = np.minimum(self.prey_trail + 1, 5)
 
         self.agents.shuffle_do("step")
+
+        # 植被再生：每格独立 0.5 概率，非 0 且非河流；封顶 4
         if hasattr(self, "vegetation") and self.vegetation is not None:
             v = self.vegetation
-            if hasattr(self, "river") and self.river is not None:
-                mask = (v > 0) & (np.random.rand(*v.shape) < 0.4)
-                v[mask] += 1
-            else:
-                v[v > 0] += 1
+            rand_mask = (np.random.rand(self.width, self.height) < 0.5)
+            regen_mask = (v > 0) & (~self.river) & rand_mask
+            v[regen_mask] += 1
             np.minimum(v, 4, out=v)
+
         self.datacollector.collect(self)
 
-        # if no prey left, stop the model
         if not any(isinstance(a, Prey) for a in self.agents):
             self.running = False
 
@@ -137,6 +161,7 @@ class FeralCatModel(Model):
             v = int(veg[x, y])
         p = self.predation_base + self.predation_coef * v
         return p
+
 
 def count_cats(model):
     return sum(isinstance(a, Cat) and getattr(a, "alive", True) for a in model.agents)
