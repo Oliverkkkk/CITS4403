@@ -34,11 +34,11 @@ class Prey(Agent):
         flee_prob = self.model.prey_flee_prob
 
         if sensed and self.model.random.random() < flee_prob and cat_positions:
-            # 3A) 逃跑模式：从候选里选“离最近猫更远”的格子（最大化最近猫距离）
+            # escape mode: from valid, choose the cell that maximizes distance to nearest cat
             best_d = -1
             best_positions = []
             for pos in neighborhood:
-                d = min(cheb(pos, c) for c in cat_positions)  # 与最近猫的距离
+                d = min(cheb(pos, c) for c in cat_positions)  # distance to nearest cat
                 if d > best_d:
                     best_d = d
                     best_positions = [pos]
@@ -104,12 +104,12 @@ class Prey(Agent):
                 baby = Prey(self.model, sex=baby_sex)
                 grid.place_agent(baby, spawn_pos)
 
-                # 可选：足迹置为“刚经过”
+                # optioanal: leave trail at birth position
                 if hasattr(self.model, "prey_trail"):
                     bx, by = spawn_pos
                     self.model.prey_trail[bx, by] = 1
 
-            # 成功繁衍后重置冷却
+            # Reset cooldown after successful breeding
             self.since_repro = 0
 
 

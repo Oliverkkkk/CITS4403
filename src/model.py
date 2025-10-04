@@ -21,12 +21,12 @@ class FeralCatModel(Model):
         predation_coef: float,
         prey_flee_prob: float,
         seed: int | None = None,
-        vegetation=None,   # 允许外部传入
-        river=None,        # 允许外部传入
+        vegetation=None,
+        river=None,
     ):
         super().__init__(seed=seed)
 
-        # --- 尺寸：若传入 vegetation 则以其尺寸为准 ---
+        # vegetation is a 2D array of int (0-4), same size as map
         if vegetation is not None:
             V = np.array(vegetation, dtype=np.int16)
             assert V.ndim == 2, "vegetation should be a 2D array"
@@ -35,7 +35,7 @@ class FeralCatModel(Model):
         else:
             self.width, self.height = width, height
 
-        # 用最终确定的尺寸创建网格
+        # use size determined above
         self.grid = MultiGrid(self.width, self.height, torus=False)
 
         self.predation_base = predation_base
@@ -76,7 +76,7 @@ class FeralCatModel(Model):
                 p=[0.4, 0.2, 0.15, 0.15, 0.1]
             )
 
-        # 足迹数组要用最终尺寸
+       # trail 1-5, 1 means just visited, 5 means long ago
         self.prey_trail = np.full((self.width, self.height), 5, dtype=int)
 
         # place prey
@@ -107,7 +107,10 @@ class FeralCatModel(Model):
         )
 
     def refresh_cat_scent(self, radius: int = 2):
-        """用当前所有存活猫的位置，生成'气味'布尔图（Chebyshev距离<=radius 即有气味）。"""
+        """
+        Generate a 'scent' Boolean graph using the current positions of all surviving cats 
+        (Chebyshev distance<=radius indicates scent)。
+        """
         w, h = self.width, self.height
 
         if not hasattr(self, "cat_scent") or getattr(self, "cat_scent").shape != (w, h):
@@ -140,7 +143,7 @@ class FeralCatModel(Model):
 
         self.agents.shuffle_do("step")
 
-        # 植被再生：每格独立 0.5 概率，非 0 且非河流；封顶 4
+        # plant regrow: each cell has independent 0.5 prob to regrow if veg>0 and not river; cap at 4
         if hasattr(self, "vegetation") and self.vegetation is not None:
             v = self.vegetation
             rand_mask = (np.random.rand(self.width, self.height) < 0.5)
