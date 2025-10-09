@@ -61,22 +61,22 @@ This project implements an agent-based model (ABM) of **feral cats vs prey** in 
 The interactive dashboard allows users to configure parameters, run simulations, and visualize outcomes.
 
 1. **Simulation Dashboard**
-![Dashboard](./materials/dashboard.png)  
+![Dashboard](./data/materials/dashboard.png)  
 The control panel lets users specify grid size, number of steps, initial cat/prey populations, and model parameters (e.g., predation rates, flee probability).  
 Users can also load custom vegetation/river maps and toggle the display of cat scent ranges.
 
 2. **Grid Animation**
-[![Grid Animation](./materials/gridAnime.png)](./materials/2DAnime.mp4)
+[![Grid Animation](./data/materials/gridAnime.png)](./data/materials/2DAnime.mp4)
 During simulation, the grid shows cats (red squares), prey (blue circles), vegetation (green), and rivers (blue, can not pass).  
 Predation events are tracked dynamically, giving a clear picture of spatial interactions.
 
 3. **Population Over Time**
-![Population over time](./materials/output1.png)  
+![Population over time](./data/materials/output1.png)  
 This plot shows the changes in prey and cat populations across simulation steps.  
 It highlights population decline due to predation and ecological constraints.
 
 4. **Predation Events per Step**
-![Predation events](./materials/output2.png)  
+![Predation events](./data/materials/output2.png)  
 This plot records the number of predation events at each time step, reflecting hunting dynamics and prey vulnerability throughout the simulation.
 
 ## 📂 Project Structure
@@ -87,8 +87,6 @@ Feral_Cats_and_Small_Mammals/
 ├── data/ # Data files and initialization scripts
 │ └── maps/ # Store generated maps
 │ └── data_init.py # Data preparation and map initialization
-│
-├── materials/ # Media materials
 │
 ├── notebooks/ # Jupyter notebooks for analysis & experiments
 │ ├── group_notebook.ipynb
