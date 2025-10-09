@@ -10,6 +10,7 @@ class FeralCatModel(Model):
     Minimum runable ABM
     MultiGrid & RandomActivation
     Rule: both cat and prey randomly move; if in same cell, try to hunt once with given probability
+    Optional parameters: river_exist (bool)
     """
     def __init__(
         self,
@@ -23,6 +24,7 @@ class FeralCatModel(Model):
         seed: int | None = None,
         vegetation=None,
         river=None,
+        **kwargs
     ):
         super().__init__(seed=seed)
 
@@ -44,27 +46,31 @@ class FeralCatModel(Model):
         self.running = True
         self.predation_events_total = 0
 
-        # --- river ---
+        # --- river --- default or none or load from file
+        river_exist = kwargs.get("river_exist", True)
         if river is not None:
             R = np.array(river, dtype=bool)
             assert R.shape == (self.width, self.height), "river should be same as map"
             self.river = R
         else:
             self.river = np.zeros((self.width, self.height), dtype=bool)
-            thickness = 2
-            cx = self.width // 2
-            x0, x1 = max(0, cx - thickness // 2), min(self.width, cx + (thickness + 1) // 2)
-            for y in range(self.height):
-                rx = int(cx + 2 * np.sin(2 * np.pi * y / max(1, self.height)))
-                half = thickness // 2
-                xL = max(0, rx - half)
-                xR = min(self.width, rx + (thickness + 1) // 2)
-                self.river[xL:xR, y] = True
-            gap_len = max(3, self.height // 6)
-            gap_center = self.height // 3
-            g0 = max(0, gap_center - gap_len // 2)
-            g1 = min(self.height, g0 + gap_len)
-            self.river[x0 - 1:x1 + 1, g0:g1] = False
+            if river_exist:
+                # create a river in the middle, 2 cells thick, meandering like a sine wave
+                # with a gap in the middle
+                thickness = 2
+                cx = self.width // 2
+                x0, x1 = max(0, cx - thickness // 2), min(self.width, cx + (thickness + 1) // 2)
+                for y in range(self.height):
+                    rx = int(cx + 2 * np.sin(2 * np.pi * y / max(1, self.height)))
+                    half = thickness // 2
+                    xL = max(0, rx - half)
+                    xR = min(self.width, rx + (thickness + 1) // 2)
+                    self.river[xL:xR, y] = True
+                gap_len = max(3, self.height // 6)
+                gap_center = self.height // 3
+                g0 = max(0, gap_center - gap_len // 2)
+                g1 = min(self.height, g0 + gap_len)
+                self.river[x0 - 1:x1 + 1, g0:g1] = False
 
         # --- vegetation ---
         if vegetation is not None:

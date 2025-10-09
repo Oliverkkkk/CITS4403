@@ -81,8 +81,8 @@ def launch_gui():
             self.width_var  = tk.StringVar(value="25")
             self.height_var = tk.StringVar(value="25")
             self.steps_var  = tk.StringVar(value="100")
-            self.cats_var   = tk.StringVar(value="6")
-            self.prey_var   = tk.StringVar(value="40")
+            self.cats_var   = tk.StringVar(value="8")
+            self.prey_var   = tk.StringVar(value="80")
             self.pb_var     = tk.StringVar(value="0.2")
             self.pc_var     = tk.StringVar(value="0.1")
             self.pf_var     = tk.StringVar(value="0.4")
@@ -122,7 +122,9 @@ def launch_gui():
             self.reset_btn.grid(row=r, column=0, columnspan=2, pady=(2,0), sticky="ew"); r += 1
 
             self.scent_var = tk.BooleanVar(value=False)  # scent display toggle
-            ttk.Checkbutton(self.params, text="Show cat scent range", variable=self.scent_var).grid(row=r, column=0, columnspan=2, sticky="w", pady=(6, 0)); r += 1
+            ttk.Checkbutton(self.params, text="Show cat scent", variable=self.scent_var).grid(row=r, column=0, columnspan=2, sticky="w", pady=(6, 0)); r += 1
+            self.river_exist = tk.BooleanVar(value=True)  # river toggle
+            ttk.Checkbutton(self.params, text="River Area", variable=self.river_exist).grid(row=r, column=0, columnspan=2, sticky="w", pady=(0, 6)); r += 1
 
             # state
             self.canvas_widget = None
@@ -299,7 +301,8 @@ def launch_gui():
                 n_cats=nc, n_prey=np_,
                 predation_base=pb, predation_coef=pc, prey_flee_prob=pf,
                 seed=seed,
-                vegetation=self.V, river=self.R
+                vegetation=self.V, river=self.R,
+                river_exist  = self.river_exist.get(),
             )
             model.datacollector.collect(model)
 
